@@ -21,17 +21,31 @@
     pointcloud/voxelize: true
 
     imu/calibration: true
-    imu/intrinsics/accel/bias: [ 0.0, 0.0, 0.0 ]
+    # imu/intrinsics/accel/bias: [ -0.33, -0.038, -5.0]
+    imu/intrinsics/accel/bias: [ 0.00233, 0.00057, 0.00087]
     imu/intrinsics/accel/sm:   [ 1.,  0.,  0.,
                                  0.,  1.,  0.,
                                  0.,  0.,  1. ]
-    imu/intrinsics/gyro/bias: [ 0.0, 0.0, 0.0 ]
+    # imu/intrinsics/gyro/bias: [ 0.0036, 0.008, 0.01017 ]
+    imu/intrinsics/gyro/bias: [ 0.00141, 0.00592, 0.00108]
+    
 
-    extrinsics/baselink2imu/t: [ 0., 0., 0. ]
-    extrinsics/baselink2imu/R: [ -1.,  0.,  0.,
-                                  0.,  1.,  0.,
-                                  0.,  0.,  -1. ]
-    extrinsics/baselink2lidar/t: [ 0.,  0.,  0. ]
-    extrinsics/baselink2lidar/R: [ 1.,  0.,  0.,
-                                   0.,  1.,  0.,
-                                   0.,  0.,  1. ]
+    # extrinsics/baselink2imu/t: [ 0.087, -0.012, 0.753 ]
+    # extrinsics/baselink2imu/R: [ -1.,  0.,  0.,
+    #                               0.,  1.,  0.,
+    #                               0.,  0.,  -1. ]
+    # extrinsics/baselink2lidar/t: [ 0.081, 0.000, 0.781 ]
+    # extrinsics/baselink2lidar/R: [ -1.,  0.,  0.,
+    #                                0.,  -1.,  0.,
+    #                                0.,  0.,  1. ]
+
+    extrinsics/baselink2imu/t: [ 0.375, 0.0, 0.5 ]
+    extrinsics/baselink2imu/R: [ -1.0, 0.0, 0.0,
+                                0.0, -1.0, 0.0,
+                                0.0, 0.0, 1.0 ]
+
+    extrinsics/baselink2lidar/t: [ 0.372, 0.0, 0.5 ]
+    extrinsics/baselink2lidar/R: [ -1.0, 0.0, 0.0,
+                                  0.0, -1.0, 0.0,
+                                  0.0, 0.0, 1.0 ]
+
