@@ -39,12 +39,15 @@
     #                                0.,  -1.,  0.,
     #                                0.,  0.,  1. ]
 
-    extrinsics/baselink2imu/t: [ 0.375, 0.0, 0.5 ]
-    extrinsics/baselink2imu/R: [ -1.0, 0.0, 0.0,
-                                0.0, -1.0, 0.0,
+    # extrinsics/baselink2imu/t: [ 0.006, -0.012, 0.008 ]
+    extrinsics/baselink2imu/t: [0.366, 0.012, 0.508]
+    extrinsics/baselink2imu/R: [ 1.0, 0.0, 0.0,
+                                0.0, 1.0, 0.0,
                                 0.0, 0.0, 1.0 ]
 
-    extrinsics/baselink2lidar/t: [ 0.372, 0.0, 0.5 ]
+    # extrinsics/baselink2lidar/t: [0.000, 0.000, 0.036]
+     
+    extrinsics/baselink2lidar/t: [0.372, 0.000, 0.536]
     extrinsics/baselink2lidar/R: [ -1.0, 0.0, 0.0,
                                   0.0, -1.0, 0.0,
                                   0.0, 0.0, 1.0 ]
