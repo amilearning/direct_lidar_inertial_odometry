@@ -56,6 +56,8 @@ private:
 
   void getParams();
 
+  void reset();
+  
   void callbackPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pc);
   void callbackImu(const sensor_msgs::msg::Imu::SharedPtr imu);
 

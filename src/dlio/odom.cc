@@ -435,7 +435,130 @@ void dlio::OdomNode::publishToROS(pcl::PointCloud<PointType>::ConstPtr published
 
 }
 
+void dlio::OdomNode::reset(){
+   
+   RCLCPP_INFO(this->get_logger(), "OdomNode has been reset.");
+
+    this->num_threads_ = omp_get_max_threads();
+
+    this->dlio_initialized = false;
+    this->first_valid_scan = false;
+    this->first_imu_received = false;
+    if (this->imu_calibrate_) {this->imu_calibrated = false;}
+    else {this->imu_calibrated = true;}
+    this->deskew_status = false;
+    this->deskew_size = 0;
+
+  
+    this->T = Eigen::Matrix4f::Identity();
+    this->T_prior = Eigen::Matrix4f::Identity();
+    this->T_corr = Eigen::Matrix4f::Identity();
+
+    this->origin = Eigen::Vector3f(0., 0., 0.);
+    this->state.p = Eigen::Vector3f(0., 0., 0.);
+    this->state.q = Eigen::Quaternionf(1., 0., 0., 0.);
+    this->state.v.lin.b = Eigen::Vector3f(0., 0., 0.);
+    this->state.v.lin.w = Eigen::Vector3f(0., 0., 0.);
+    this->state.v.ang.b = Eigen::Vector3f(0., 0., 0.);
+    this->state.v.ang.w = Eigen::Vector3f(0., 0., 0.);
+
+    this->lidarPose.p = Eigen::Vector3f(0., 0., 0.);
+    this->lidarPose.q = Eigen::Quaternionf(1., 0., 0., 0.);
+
+    this->imu_meas.stamp = 0.;
+    this->imu_meas.ang_vel[0] = 0.;
+    this->imu_meas.ang_vel[1] = 0.;
+    this->imu_meas.ang_vel[2] = 0.;
+    this->imu_meas.lin_accel[0] = 0.;
+    this->imu_meas.lin_accel[1] = 0.;
+    this->imu_meas.lin_accel[2] = 0.;
+
+    this->imu_buffer.set_capacity(this->imu_buffer_size_);
+    this->first_imu_stamp = 0.;
+    this->prev_imu_stamp = 0.;
+
+    this->original_scan = std::make_shared<const pcl::PointCloud<PointType>>();
+    this->deskewed_scan = std::make_shared<const pcl::PointCloud<PointType>>();
+    this->current_scan = std::make_shared<const pcl::PointCloud<PointType>>();
+    this->submap_cloud = std::make_shared<const pcl::PointCloud<PointType>>();
+
+    this->num_processed_keyframes = 0;
+
+    this->submap_hasChanged = true;
+    this->submap_kf_idx_prev.clear();
+
+    this->first_scan_stamp = 0.;
+    this->elapsed_time = 0.;
+  
+
+        // Reset trajectory
+        trajectory.clear();
+        length_traversed = 0.0;
+
+        // Reset keyframes
+        keyframes.clear();
+        keyframe_timestamps.clear();
+        keyframe_normals.clear();
+        keyframe_transformations.clear();
+
+        // Reset submap-related variables
+        submap_cloud.reset();
+        submap_normals.reset();
+        submap_kdtree.reset();
+        submap_kf_idx_curr.clear();
+        submap_kf_idx_prev.clear();
+        new_submap_is_ready = false;
+
+        // Reset IMU-related variables
+        imu_stamp = rclcpp::Time(0);
+        first_imu_stamp = 0.0;
+        prev_imu_stamp = 0.0;
+        imu_dp = 0.0;
+        imu_dq_deg = 0.0;
+        imu_buffer.clear();
+
+        // Reset geometric observer
+        this->geo.first_opt_done = false;
+        this->geo.prev_vel = Eigen::Vector3f(0., 0., 0.);
+
+        geo.dp = 0.0;
+        geo.dq_deg = 0.0;
+        geo.prev_p = Eigen::Vector3f::Zero();
+        geo.prev_q = Eigen::Quaternionf::Identity();
+        geo.prev_vel = Eigen::Vector3f::Zero();
+
+        // Reset state
+        state.p = Eigen::Vector3f::Zero();
+        state.q = Eigen::Quaternionf::Identity();
+        state.v.lin.b = Eigen::Vector3f::Zero();
+        state.v.lin.w = Eigen::Vector3f::Zero();
+        state.v.ang.b = Eigen::Vector3f::Zero();
+        state.v.ang.w = Eigen::Vector3f::Zero();
+        state.b.gyro = Eigen::Vector3f::Zero();
+        state.b.accel = Eigen::Vector3f::Zero();
+
+        // Reset metrics
+        this->metrics.spaciousness.clear();
+        this->metrics.density.clear();
+        this->metrics.spaciousness.push_back(0.);
+        this->metrics.density.push_back(this->gicp_max_corr_dist_);
+
+
+
+        // Reset transformations
+        T = Eigen::Matrix4f::Identity();
+        T_prior = Eigen::Matrix4f::Identity();
+        T_corr = Eigen::Matrix4f::Identity();
+        q_final = Eigen::Quaternionf::Identity();
+        origin = Eigen::Vector3f::Zero();
+
+     
+
+
+}
+
 void dlio::OdomNode::publishCloud(pcl::PointCloud<PointType>::ConstPtr published_cloud, Eigen::Matrix4f T_cloud) {
+
 
   if (this->wait_until_move_) {
     if (this->length_traversed < 0.1) { return; }
@@ -756,6 +879,9 @@ void dlio::OdomNode::initializeDLIO() {
 
 void dlio::OdomNode::callbackPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pc) {
 
+
+  
+
   std::unique_lock<decltype(this->main_loop_running_mutex)> lock(main_loop_running_mutex);
   this->main_loop_running = true;
   lock.unlock();
@@ -854,9 +980,14 @@ void dlio::OdomNode::callbackPointCloud(const sensor_msgs::msg::PointCloud2::Sha
 
   this->geo.first_opt_done = true;
 
+
+ 
+  
 }
 
 void dlio::OdomNode::callbackImu(const sensor_msgs::msg::Imu::SharedPtr imu_raw) {
+
+ 
 
   this->first_imu_received = true;
 
@@ -1815,6 +1946,9 @@ void dlio::OdomNode::debug() {
     }
     p_curr = t.first;
     double l = sqrt(pow(p_curr[0] - p_prev[0], 2) + pow(p_curr[1] - p_prev[1], 2) + pow(p_curr[2] - p_prev[2], 2));
+
+    // if l is too large.. there is problem with the trajectory
+    
 
     if (l >= 0.1) {
       length_traversed += l;
