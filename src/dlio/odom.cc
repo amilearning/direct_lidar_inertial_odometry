@@ -30,7 +30,7 @@ dlio::OdomNode::OdomNode() : Node("dlio_odom_node") {
   else {this->imu_calibrated = true;}
   this->deskew_status = false;
   this->deskew_size = 0;
-
+  this->prev_length_traversed = 0.0;
   this->lidar_cb_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto lidar_sub_opt = rclcpp::SubscriptionOptions();
   lidar_sub_opt.callback_group = this->lidar_cb_group;
@@ -493,7 +493,8 @@ void dlio::OdomNode::reset(){
 
         // Reset trajectory
         trajectory.clear();
-        length_traversed = 0.0;
+        this->length_traversed = 0.0;
+        this->prev_length_traversed = 0.0;
 
         // Reset keyframes
         keyframes.clear();
@@ -879,7 +880,7 @@ void dlio::OdomNode::initializeDLIO() {
 
 void dlio::OdomNode::callbackPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pc) {
 
-
+  
   
 
   std::unique_lock<decltype(this->main_loop_running_mutex)> lock(main_loop_running_mutex);
@@ -980,7 +981,14 @@ void dlio::OdomNode::callbackPointCloud(const sensor_msgs::msg::PointCloud2::Sha
 
   this->geo.first_opt_done = true;
 
-
+if (this->prev_length_traversed > 0.0){    
+    double dist_l = length_traversed - prev_length_traversed;
+    if (abs(dist_l) > 0.5){
+      RCLCPP_INFO(this->get_logger(), "Distance traversed between pointcloud callbacks... seems diverge.. reseting...: %f", dist_l);
+      reset();
+    }
+  }
+  this->prev_length_traversed = this->length_traversed;
  
   
 }
